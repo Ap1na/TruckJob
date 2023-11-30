@@ -1,17 +1,17 @@
 --[[
 TruckJob - Created by Lama	
-For support - https://discord.gg/etkAKTw3M7
+For support - https://discord.gg/etkAKTw3M7	
 Do not edit below if you don't know what you are doing
 ]] --
 
 -- ND_Framework exports (edit with your framework's)
-NDCore = exports["ND_Core"]:GetCoreObject()
+ESX = nil
+ESX = exports["es_extended"]:getSharedObject()
 
 -- variables, do not touch
 local deliveries = {}
 local playersOnJob = {}
 
--- function to check if the client is actually at the job ending location before giving them the money
 function isClientTooFar(location)
 	local distance = #(GetEntityCoords(GetPlayerPed(source)) - vector3(location.x, location.y, location.z))
 	-- checking from a distance of 15 because it might not be 100% correct
@@ -20,13 +20,17 @@ function isClientTooFar(location)
 	end
 end
 
-RegisterNetEvent("lama_jobs:started", function()
+RegisterNetEvent("lama_jobs:started")
+    AddEventHandler("lama_jobs:started", function()
     local src = source
+    local xPlayer = ESX.GetPlayerFromId(source)
     playersOnJob[src] = true
 end)
 
-RegisterNetEvent("lama_jobs:delivered", function(location)
+RegisterNetEvent("lama_jobs:delivered")
+    AddEventHandler("lama_jobs:delivered", function(location)
     local src = source
+    local xPlayer = ESX.GetPlayerFromId(source)
 	if playersOnJob[src] and not isClientTooFar(location) then
 		-- keep track of amount of deliveries made
         if not deliveries[src] then
@@ -38,36 +42,31 @@ RegisterNetEvent("lama_jobs:delivered", function(location)
 	end
 end)
 
-RegisterNetEvent("lama_jobs:finished", function()
+RegisterNetEvent("lama_jobs:finished")
+    AddEventHandler("lama_jobs:finished", function()
     local src = source
+    local xPlayer = ESX.GetPlayerFromId(source)
 	if not deliveries[src] or deliveries[src] == 0 then
 		print(string.format("^1Possible exploiter detected\nName: ^0%s\n^1Identifier: ^0%s\n^1Reason: ^0has somehow requested to be paid without delivering anything", GetPlayerName(source), GetPlayerIdentifier(source, 0)))
 	else
 		-- calculate amount of money to give to the player
 		local amount = Config.PayPerDelivery * deliveries[src]
-			-- only give the money to the client if it is on the job and near the ending location
 		if playersOnJob[src] and not isClientTooFar(Config.DepotLocation) then
 			-- give the money to player
 			-- if using another framework than ND, simply change the function below to your framework's
             deliveries[src] = 0
             playersOnJob[src] = false
-			NDCore.Functions.AddMoney(amount, src, "bank")
+			xPlayer.addMoney(amount)
 		else
 			print(string.format("^1Possible exploiter detected\nName: ^0%s\n^1Identifier: ^0%s\n^1Reason: ^0has somehow requested to be paid without being near the job ending location", GetPlayerName(source), GetPlayerIdentifier(source, 0)))
 		end	
 	end
 end)
 
-RegisterNetEvent("lama_jobs:forcequit", function()
-    local src = source
-    local penalty = Config.Penalty
-    NDCore.Functions.DeductMoney(penalty, src, "bank")
-end)
-
 -- version checker
 Citizen.CreateThread(function()
-    updatePath = "/lama-development/TruckJob"
-    resourceName = "TruckJob by Lama"
+    updatePath = "/Ap1na/esx-TruckJob"
+    resourceName = "TruckJob by Lama (fork by Ap1na)"
 
     function checkVersion(err, responseText, headers)
         -- Returns the version set in the file

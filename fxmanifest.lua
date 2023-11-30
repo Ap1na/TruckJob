@@ -1,7 +1,7 @@
 name 'TruckJob'
 description 'Work as a truck driver'
-author 'Lama#9612'
-version '1.3'
+author 'Lama#9612 and Ap1na'
+version '1.4'
 
 fx_version 'cerulean'
 game 'gta5'

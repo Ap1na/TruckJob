@@ -1,8 +1,26 @@
 --[[
-TruckJob - Created by Lama	
-For support - https://discord.gg/etkAKTw3M7
+TruckJob - Created by Lama (fork by Ap1na)
 Do not edit below if you don't know what you are doing
 ]] --
+
+local ESX = nil -- ESX 
+Citizen.CreateThread(function()
+	while ESX == nil do
+		ESX = exports["es_extended"]:getSharedObject()
+		Citizen.Wait(0)
+	end
+end)
+RegisterNetEvent('esx:playerLoaded') -- toto načte postavu prostě základ
+AddEventHandler('esx:playerLoaded', function(xPlayer)
+    src = xPlayer
+    ESX.PlayerData = xPlayer
+end)
+
+
+RegisterNetEvent('esx:onPlayerLogout')
+AddEventHandler('esx:onPlayerLogout', function()
+	ESX.PlayerData = {}
+end)
 
 local amount = 0
 local playerCoords = nil
@@ -30,28 +48,60 @@ CreateThread(function()
 end)
 
 -- starting the job
+
 CreateThread(function()
+    local hideHelpText = false
     AddTextEntry("press_start_job", "Press ~INPUT_CONTEXT~ to start your shift")
     while true do
         opti = 2
         -- get distance between blip and player and check if player is near it
         if not jobStarted then
             if #(playerCoords - vector3(Config.BlipLocation.x, Config.BlipLocation.y, Config.BlipLocation.z)) <= 5 then
-                DisplayHelpTextThisFrame("press_start_job")
+                if hideHelpText == false then
+                    DisplayHelpTextThisFrame("press_start_job")
+                end
                 if IsControlPressed(1, 38) then
-                    if IsPedSittingInAnyVehicle(player) then
-                        DisplayNotification("~r~You can't start the job while you're in a vehicle.")
-                    else
-                        SpawnVehicle(Config.TruckModel, Config.DepotLocation)
-                        SetPedIntoVehicle(player, vehicle, -1)
-                        -- tell server we are starting the job
-                        TriggerServerEvent("lama_jobs:started")
-                        StartJob()
-                    end
+                    hideHelpText = true
+                    HideHelpTextThisFrame()
+                    local Elements = {
+                        {label = "Start job", name = 'start'},
+                        {label = "Cancel", name = "cancel"}
+                    }
+                    ESX.UI.Menu.Open("default", GetCurrentResourceName(), "Example_Menu", {
+                        title = "Truck job Menu", -- The Name of Menu to show to users,
+                        align    = 'top-left', -- top-left | top-right | bottom-left | bottom-right | center |
+                        elements = Elements -- define elements as the pre-created table
+                    }, function(data,menu) -- OnSelect Function
+                        if data.current.name == "start" then
+                            if ESX.PlayerData.job.name == 'trucker' then
+                                if IsPedSittingInAnyVehicle(player) then
+                                    ESX.ShowNotification("You cant start the job when you're in a vehicle.", true, false, red)
+                                    hideHelpText = false
+                                    menu.close()
+                                else
+                                    SpawnVehicle(Config.TruckModel, Config.DepotLocation)
+                                    SetPedIntoVehicle(player, vehicle, -1)
+                                    -- tell server we are starting the job
+                                    TriggerServerEvent("lama_jobs:started")
+                                    jobStarted = true
+                                    hideHelpText = false
+                                    StartJob()
+                                    menu.close()
+                                end
+                            else
+                                ESX.ShowNotification("You don't work here.", true, false, red)
+                            end
+                        elseif data.current.name == "cancel" then
+                            hideHelpText = false
+                            menu.close()
+                        end
+                    end)
                 end
             else
                 opti = 2000
             end
+        else
+            ESX.ShowNotification("Job is already started...", true, false, red)
         end
         Wait(opti)
     end
@@ -64,7 +114,7 @@ function StartJob()
     -- choose random trailer model
     local model = math.randomchoice(Config.TrailerModels)
     -- add trailer blip to map
-    blip = AddBlipForCoord(location.x, location.y, location.z)
+    local blip = AddBlipForCoord(location.x, location.y, location.z)
     SetBlipSprite(blip, 479)
     SetBlipColour(blip, 26)
     SetBlipRoute(blip, true)
@@ -76,19 +126,10 @@ function StartJob()
         DeleteVehicle(trailer)
     end
     trailer = SpawnTrailer(model, location)
-    DisplayNotification("~b~New task: ~w~pick up the trailer at the marked location.")
-    if Config.UseND then 
-        DisplayNotification("Long press ~r~SHIFT~w~ + ~r~X~w~ at any time to force-cancel the job and pay a penalty.")
-    else
-        DisplayNotification("Long Press ~r~SHIFT~w~ + ~r~X~w~ at any time to force-cancel the job.")
-    end
+    ESX.ShowNotification("New task: pick up the trailer at the marked location.", true, false, green)
+    jobStarted = true
     while true do
         opti = 2
-        -- check if forcequit 
-        if IsControlPressed(1, 73) then
-            ForceQuit()
-            break
-        end
         -- gets distance between player and trailer location and check if player is in the vicinity of it
         if #(playerCoords - vector3(location.x, location.y, location.z)) <= 20 then
             -- and check if they have picked up the trailer 
@@ -113,14 +154,9 @@ function DeliverTrailer()
     SetBlipColour(blip, 26)
     SetBlipRoute(blip, true)
     SetBlipRouteColour(blip, 26)
-    DisplayNotification("~b~New task: ~w~deliver the trailer at the marked location.")
+    ESX.ShowNotification("New task: deliver the trailer at the marked location.", true, false, green)
     while true do
         opti = 2
-        -- check if forcequit 
-        if IsControlPressed(1, 73) then
-            ForceQuit()
-            break
-        end
         -- gets distance between player and task location and check f player is in the vicinity of it
         if #(playerCoords - vector3(location.x, location.y, location.z)) <= 20 then
             DisplayHelpTextThisFrame("press_detach_trailer")
@@ -142,7 +178,7 @@ function NewChoice(location)
     amount = amount + Config.PayPerDelivery
     -- tell server we delivered something and where
     TriggerServerEvent("lama_jobs:delivered", location)
-    DisplayNotification("Press ~b~E~w~ to accept another job.\nPress ~r~X~w~ to end your shift.")
+    ESX.ShowNotification("Press E to accept another job. Press X to end your shift.", true, false, blue)
     while true do
         Wait(0)
         if IsControlPressed(1, 38) then
@@ -163,11 +199,7 @@ function EndJob()
     SetBlipColour(blip, 26)
     SetBlipRoute(blip, true)
     SetBlipRouteColour(blip, 26)
-    if Config.UseND then 
-        DisplayNotification("~b~New task: ~w~return the truck to the depot to get paid.")
-    else 
-        DisplayNotification("~b~New task: ~w~return the truck to the depot.")
-    end
+    ESX.ShowNotification("New task: return the truck to the depot to get paid.", true, false, green)
     jobStarted = false
     while true do
         opti = 2
@@ -182,35 +214,14 @@ function EndJob()
                     DeleteVehicle(GetVehiclePedIsIn(PlayerPedId(), false))
                 end
                 DeleteVehicle(trailer)
-                if Config.UseND then
-                    -- tell server ve've finished the job and need to pay us
-                    TriggerServerEvent("lama_jobs:finished")
-                    DisplayNotification("You've received ~g~$" .. amount .. " ~w~for completing the job.")
-                    amount = 0
-                    break
-                else
-                    DisplayNotification("~g~You've successfully completed the job.")
-                    break
-                end
+                ESX.ShowNotification("You've received $" .. amount .. " for completing the job.", true, false, green)
+                break
             end
         else
             opti = 1000
         end
         Wait(opti)
     end
-end
-
-function ForceQuit()
-    DeleteVehicle(GetVehiclePedIsIn(PlayerPedId(), false))
-    DeleteVehicle(trailer)
-    RemoveBlip(blip)
-    if Config.UseND then
-        TriggerServerEvent("lama_jobs:forcequit")
-        DisplayNotification("You've been fined ~r~$" .. Config.Penalty .. " ~w~for cancelling the job.")
-    else
-        DisplayNotification("~r~You've cancelled the job.")
-    end
-    amount = 0
 end
 
 -- function to spawn vehicle at desired location

@@ -1,16 +1,10 @@
 Config = {}
 
--- Leave this to true if you use ND_Framework (https://forum.cfx.re/t/updated-nd-framework-addons/4792200)
--- Set this to false if you want it to be standalone
-Config.UseND = true
-
 -- Set the amount of money the player will be paid for each delivery completed
 -- For example, if it is equal to 500, delivering 3 trailers will get you $1500
--- Only works if you set UseND to true, otherwise leave this as it is
 Config.PayPerDelivery = 750
 
 -- Set the amount of money the player will be fined for cancelling the job
--- Only works if you set UseND to true, otherwise leave this as it is
 Config.Penalty = 250
 
 -- Set the truck model name used for the job
