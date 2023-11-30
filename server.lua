@@ -65,7 +65,7 @@ end)
 
 -- version checker
 Citizen.CreateThread(function()
-    updatePath = "/Ap1na/esx-TruckJob"
+    updatePath = "/Ap1na/TruckJob"
     resourceName = "TruckJob by Lama (fork by Ap1na)"
 
     function checkVersion(err, responseText, headers)
