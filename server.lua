@@ -1,10 +1,8 @@
 --[[
-TruckJob - Created by Lama	
-For support - https://discord.gg/etkAKTw3M7	
+TruckJob - Created by Lama (fork by Ap1na)
 Do not edit below if you don't know what you are doing
 ]] --
 
--- ND_Framework exports (edit with your framework's)
 ESX = nil
 ESX = exports["es_extended"]:getSharedObject()
 
@@ -49,14 +47,11 @@ RegisterNetEvent("lama_jobs:finished")
 	if not deliveries[src] or deliveries[src] == 0 then
 		print(string.format("^1Possible exploiter detected\nName: ^0%s\n^1Identifier: ^0%s\n^1Reason: ^0has somehow requested to be paid without delivering anything", GetPlayerName(source), GetPlayerIdentifier(source, 0)))
 	else
-		-- calculate amount of money to give to the player
-		local amount = Config.PayPerDelivery * deliveries[src]
+		local amount = Config.PayPerDelivery * deliveries[src] -- calculate amount of money to give to the player
 		if playersOnJob[src] and not isClientTooFar(Config.DepotLocation) then
-			-- give the money to player
-			-- if using another framework than ND, simply change the function below to your framework's
             deliveries[src] = 0
             playersOnJob[src] = false
-			xPlayer.addMoney(amount)
+			xPlayer.addMoney(amount) -- give the money to player
 		else
 			print(string.format("^1Possible exploiter detected\nName: ^0%s\n^1Identifier: ^0%s\n^1Reason: ^0has somehow requested to be paid without being near the job ending location", GetPlayerName(source), GetPlayerIdentifier(source, 0)))
 		end	

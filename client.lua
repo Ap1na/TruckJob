@@ -9,6 +9,10 @@ Citizen.CreateThread(function()
 		ESX = exports["es_extended"]:getSharedObject()
 		Citizen.Wait(0)
 	end
+    while ESX.GetPlayerData() == nil do
+        Citizen.Wait(10)
+    end
+    PlayerData = ESX.GetPlayerData()
 end)
 RegisterNetEvent('esx:playerLoaded') -- toto načte postavu prostě základ
 AddEventHandler('esx:playerLoaded', function(xPlayer)
@@ -16,6 +20,10 @@ AddEventHandler('esx:playerLoaded', function(xPlayer)
     ESX.PlayerData = xPlayer
 end)
 
+RegisterNetEvent('esx:setJob')
+AddEventHandler('esx:setJob', function(job)
+    PlayerData.job = job
+end)
 
 RegisterNetEvent('esx:onPlayerLogout')
 AddEventHandler('esx:onPlayerLogout', function()
@@ -73,7 +81,7 @@ CreateThread(function()
                         elements = Elements -- define elements as the pre-created table
                     }, function(data,menu) -- OnSelect Function
                         if data.current.name == "start" then
-                            if ESX.PlayerData.job.name == 'trucker' then
+                            if PlayerData.job.name == 'trucker' then
                                 if IsPedSittingInAnyVehicle(player) then
                                     ESX.ShowNotification("You cant start the job when you're in a vehicle.", true, false, red)
                                     hideHelpText = false
@@ -85,8 +93,8 @@ CreateThread(function()
                                     TriggerServerEvent("lama_jobs:started")
                                     jobStarted = true
                                     hideHelpText = false
-                                    StartJob()
                                     menu.close()
+                                    StartJob()
                                 end
                             else
                                 ESX.ShowNotification("You don't work here.", true, false, red)
@@ -100,8 +108,6 @@ CreateThread(function()
             else
                 opti = 2000
             end
-        else
-            ESX.ShowNotification("Job is already started...", true, false, red)
         end
         Wait(opti)
     end
