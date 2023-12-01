@@ -96,17 +96,15 @@ CreateThread(function()
                                         menu.close()
                                         StartJob()
                                     end
-                                else -- if player doesn't have the trucker job
-                                    ESX.ShowNotification("You don't work here.", true, false, red)
                                 end
                             elseif data.current.name == "cancel" then
                                 hideHelpText = false
                                 menu.close()
                             end
-                        else
-                            ESX.ShowNotification("You don't work here.", true, false, red)
-                        end
-                    end)
+                        end)
+                    else -- if player doesn't have the trucker job
+                        ESX.ShowNotification("You don't work here.", true, false, red)
+                    end
                 end
             else
                 opti = 2000
