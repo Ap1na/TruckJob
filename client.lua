@@ -69,39 +69,42 @@ CreateThread(function()
                     DisplayHelpTextThisFrame("press_start_job")
                 end
                 if IsControlPressed(1, 38) then
-                    hideHelpText = true
-                    HideHelpTextThisFrame()
-                    local Elements = {
-                        {label = "Start job", name = 'start'},
-                        {label = "Cancel", name = "cancel"}
-                    }
-                    ESX.UI.Menu.Open("default", GetCurrentResourceName(), "Example_Menu", {
-                        title = "Truck job Menu", -- The Name of Menu to show to users,
-                        align    = 'top-left', -- top-left | top-right | bottom-left | bottom-right | center |
-                        elements = Elements -- define elements as the pre-created table
-                    }, function(data,menu) -- OnSelect Function
-                        if data.current.name == "start" then
-                            if PlayerData.job.name == 'trucker' then
-                                if IsPedSittingInAnyVehicle(player) then
-                                    ESX.ShowNotification("You cant start the job when you're in a vehicle.", true, false, red)
-                                    hideHelpText = false
-                                    menu.close()
-                                else
-                                    SpawnVehicle(Config.TruckModel, Config.DepotLocation)
-                                    SetPedIntoVehicle(player, vehicle, -1)
-                                    -- tell server we are starting the job
-                                    TriggerServerEvent("lama_jobs:started")
-                                    jobStarted = true
-                                    hideHelpText = false
-                                    menu.close()
-                                    StartJob()
+                    if PlayerData.job.name == 'trucker' then -- check if player has the trucker job
+                        hideHelpText = true
+                        HideHelpTextThisFrame()
+                        local Elements = {
+                            {label = "Start job", name = 'start'},
+                            {label = "Cancel", name = "cancel"}
+                        }
+                        ESX.UI.Menu.Open("default", GetCurrentResourceName(), "Example_Menu", {
+                            title = "Truck job Menu", -- The Name of Menu to show to users,
+                            align    = 'top-left', -- top-left | top-right | bottom-left | bottom-right | center |
+                            elements = Elements -- define elements as the pre-created table
+                        }, function(data,menu) -- OnSelect Function
+                            if data.current.name == "start" then
+                                if PlayerData.job.name == 'trucker' then
+                                    if IsPedSittingInAnyVehicle(player) then -- check if player is in a vehicle
+                                        ESX.ShowNotification("You cant start the job when you're in a vehicle.", true, false, red)
+                                        hideHelpText = false
+                                        menu.close()
+                                    else -- if player is not in a vehicle then start the job
+                                        SpawnVehicle(Config.TruckModel, Config.DepotLocation)
+                                        SetPedIntoVehicle(player, vehicle, -1)
+                                        TriggerServerEvent("lama_jobs:started")
+                                        jobStarted = true
+                                        hideHelpText = false
+                                        menu.close()
+                                        StartJob()
+                                    end
+                                else -- if player doesn't have the trucker job
+                                    ESX.ShowNotification("You don't work here.", true, false, red)
                                 end
-                            else
-                                ESX.ShowNotification("You don't work here.", true, false, red)
+                            elseif data.current.name == "cancel" then
+                                hideHelpText = false
+                                menu.close()
                             end
-                        elseif data.current.name == "cancel" then
-                            hideHelpText = false
-                            menu.close()
+                        else
+                            ESX.ShowNotification("You don't work here.", true, false, red)
                         end
                     end)
                 end
